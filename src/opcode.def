@@ -259,6 +259,12 @@ WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd0, RefNull, "ref.null", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd1, RefIsNull, "ref.is_null", "")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd2, RefFunc, "ref.func", "")
 
+/* JSObject emu (--enable-jsobj-emu) */
+WABT_OPCODE(___,  I32,  ___,  ___,  0,  0xf0, 0x00, JSObjectThis, "jsobj.this", "")
+WABT_OPCODE(___,  I32,  I32,  ___,  0,  0xf0, 0x01, JSObjectAttrGet, "jsobj.attr.get", "")
+WABT_OPCODE(___,  I32,  I32,  ___,  0,  0xf0, 0x02, JSObjectAttrSet, "jsobj.attr.set", "")
+WABT_OPCODE(___,  I32,  I32,  ___,  0,  0xf0, 0x10, JSObjectFuncCall, "jsobj.func.call", "")
+
 /* Simd opcodes (--enable-simd) */
 WABT_OPCODE(V128, I32,  ___,  ___,  16, 0xfd, 0x00, V128Load,  "v128.load", "")
 WABT_OPCODE(V128, I32,   ___, ___,  8,  0xfd, 0x01, V128Load8X8S, "v128.load8x8_s", "")

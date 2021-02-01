@@ -152,7 +152,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 565,
+      TOTAL_KEYWORDS = 566,
       MIN_WORD_LENGTH = 2,
       MAX_WORD_LENGTH = 26,
       MIN_HASH_VALUE = 23,
@@ -458,7 +458,9 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""},
 #line 513 "src/lexer-keywords.txt"
       {"struct", Type::Struct, TokenType::Struct},
-      {""}, {""},
+      {""},
+#line 586 "src/lexer-keywords.txt"
+      {"jsobj.def", TokenType::JSObjectDef},
 #line 154 "src/lexer-keywords.txt"
       {"f64x2.nearest", TokenType::Unary, Opcode::F64X2Nearest},
       {""}, {""}, {""}, {""}, {""}, {""},

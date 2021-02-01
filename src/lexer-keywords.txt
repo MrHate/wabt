@@ -583,3 +583,11 @@ i64.trunc_u:sat/f64, TokenType::Convert, Opcode::I64TruncSatF64U
 set_global, TokenType::GlobalSet, Opcode::GlobalSet
 set_local, TokenType::LocalSet, Opcode::LocalSet
 tee_local, TokenType::LocalTee, Opcode::LocalTee
+jsobj.def, TokenType::JSObjectDef
+jsobj.attr.new, TokenType::JSObjectAttrDef
+jsobj.attr.get, TokenType::JSObjectAttrOp, Opcode::JSObjectAttrGet
+jsobj.attr.set, TokenType::JSObjectAttrOp, Opcode::JSObjectAttrSet
+jsobj.func.new, TokenType::JSObjectFuncDef
+jsobj.func.call, TokenType::Call, Opcode::JSObjectFuncCall
+jsobj.this, TokenType::JSObjectThis, Opcode::JSObjectThis
+jsobj.ref, Type::JSObjectRef, TokenType::JSObjectRef

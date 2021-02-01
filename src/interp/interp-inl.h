@@ -534,6 +534,7 @@ inline bool Extern::classof(const Object* obj) {
     case ObjectKind::Memory:
     case ObjectKind::Global:
     case ObjectKind::Event:
+    case ObjectKind::JSObject:
       return true;
     default:
       return false;

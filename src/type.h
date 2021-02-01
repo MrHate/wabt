@@ -47,6 +47,7 @@ class Type {
     Func = -0x20,       // 0x60
     Struct = -0x21,     // 0x5f
     Array = -0x22,      // 0x5e
+    JSObjectRef = -0x23,// 0x5d
     Void = -0x40,       // 0x40
     ___ = Void,         // Convenient for the opcode table in opcode.h
 

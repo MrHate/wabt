@@ -43,6 +43,7 @@ const char* GetName(ObjectKind kind) {
   static const char* kNames[] = {
       "Null",   "Foreign", "Trap",  "DefinedFunc", "HostFunc", "Table",
       "Memory", "Global",  "Event", "Module",      "Instance", "Thread",
+      "JSObject",
   };
   return kNames[int(kind)];
 }
@@ -218,6 +219,8 @@ bool Store::HasValueType(Ref ref, ValueType type) const {
       return obj->kind() == ObjectKind::DefinedFunc ||
              obj->kind() == ObjectKind::HostFunc;
     case ValueType::ExnRef:  // TODO
+      return false;
+    case ValueType::JSObjectRef:
       return false;
     default:
       return false;
@@ -668,6 +671,34 @@ Result Event::Match(Store& store,
   return MatchImpl(store, import_type, type_, out_trap);
 }
 
+//// JSObject ////
+JSObjectDefinition::JSObjectDefinition(Store& store, const JSObjectDesc& desc)
+  : Extern(skind), store_(store), desc_(desc) {}
+
+void JSObjectDefinition::Mark(Store& store) {}
+
+void JSObjectDefinition::SetAttr(u32 attr_idx, Value value) {
+  Global::Ptr attr{store_, attrs_[attr_idx]};
+  attr->UnsafeSet(value);
+}
+
+Value JSObjectDefinition::GetAttr(u32 attr_idx) const {
+  Global::Ptr attr{store_, attrs_[attr_idx]};
+  return attr->Get();
+}
+
+// JSObjectDefinition::Ptr New(Store& store, Instance& inst, const JSObjectDesc& desc) {
+//   auto ptr = store.Alloc<JSObjectDefinition>(store, desc);
+//   // Handle class members.
+//   for(auto& attr_desc : desc.attr_descs)
+//     ptr->attrs.push_back(
+//         Global::New(store, attr_desc.type, inst->ResolveInitExpr(store, attr_desc.init)).ref());
+//   for(auto& func_desc : desc.func_descs)
+//     ptr->funcs.push_back(
+//         DefinedFunc::New(store, inst.ref(), func_desc).ref());
+//   return ptr;
+// }
+
 //// ElemSegment ////
 ElemSegment::ElemSegment(const ElemDesc* desc, Instance::Ptr& inst)
     : desc_(desc) {
@@ -761,6 +792,7 @@ Instance::Ptr Instance::Instantiate(Store& store,
       case ExternKind::Memory: inst->memories_.push_back(extern_ref); break;
       case ExternKind::Global: inst->globals_.push_back(extern_ref); break;
       case ExternKind::Event:  inst->events_.push_back(extern_ref); break;
+      case ExternKind::JSObject:  assert(0);
     }
   }
 
@@ -791,6 +823,12 @@ Instance::Ptr Instance::Instantiate(Store& store,
     inst->events_.push_back(Event::New(store, desc.type).ref());
   }
 
+  // JSObjects.
+  for (auto&& desc : mod->desc().jsobjs) {
+    // TODO: handle attributes and methods declaration.
+    inst->jsobjs_.push_back(JSObjectDefinition::New(store, *inst, desc).ref());
+  }
+
   // Exports.
   for (auto&& desc : mod->desc().exports){
     Ref ref;
@@ -800,6 +838,7 @@ Instance::Ptr Instance::Instantiate(Store& store,
       case ExternKind::Memory: ref = inst->memories_[desc.index]; break;
       case ExternKind::Global: ref = inst->globals_[desc.index]; break;
       case ExternKind::Event:  ref = inst->events_[desc.index]; break;
+      case ExternKind::JSObject:  ref = inst->jsobjs_[desc.index]; break;
     }
     inst->exports_.push_back(ref);
   }
@@ -1131,6 +1170,24 @@ RunResult Thread::StepInternal(Trap::Ptr* out_trap) {
         return DoCall(new_func, out_trap);
       }
     }
+
+    case O::JSObjectThis:
+      // JSObjectDefinition::Ptr selected_jsobj{store_, inst_->funcs()[instr.imm_u32]};
+      // Push(selected_jsobj->addr());
+      break;
+    case O::JSObjectAttrGet:
+      // JSObjectDefinition::Ptr selected_jsobj{store_, inst_->funcs()[instr.imm_u32x2.fst]};
+      // Push(selected_jsobj->GetAttr(instr.imm_u32x2.snd));
+      break;
+    case O::JSObjectAttrSet:
+      // JSObjectDefinition::Ptr selected_jsobj{store_, inst_->funcs()[instr.imm_u32x2.fst]};
+      // selected_jsobj->SetAttr(instr.imm_u32x2.snd, Pop());
+      break;
+    case O::JSObjectFuncCall:
+      // TODO:
+      // 1. Push $this onto stack or record any object indentifier into `inst_`.
+      // 2. Call certain method of certain object.
+      assert(0);
 
     case O::Drop:
       Pop();

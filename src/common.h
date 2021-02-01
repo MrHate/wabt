@@ -375,8 +375,10 @@ enum class ExternalKind {
   Global = 3,
   Event = 4,
 
+  JSObject = 5,
+
   First = Func,
-  Last = Event,
+  Last = JSObject,
 };
 static const int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
 

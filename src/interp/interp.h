@@ -87,6 +87,7 @@ enum class ObjectKind {
   Module,
   Instance,
   Thread,
+  JSObject,
 };
 
 const char* GetName(Mutability);
@@ -265,6 +266,19 @@ struct EventType : ExternType {
   ValueTypes signature;
 };
 
+struct JSObjectType : ExternType {
+  static const ExternKind skind = ExternKind::JSObject;
+  static bool classof(const ExternType* type);
+
+  explicit JSObjectType(EventAttr, const ValueTypes&);
+
+  std::unique_ptr<ExternType> Clone() const override;
+
+  friend Result Match(const EventType& expected,
+                      const EventType& actual,
+                      std::string* out_msg);
+};
+
 struct ImportType {
   explicit ImportType(std::string module,
                       std::string name,
@@ -336,6 +350,14 @@ struct ExportDesc {
   Index index;
 };
 
+struct JSObjectDesc {
+  JSObjectType type;
+  std::string name, addr;
+  std::vector<GlobalDesc> attr_descs;
+  std::vector<FuncDesc> func_descs;
+  std::vector<std::string> attr_names, func_names;
+};
+
 struct StartDesc {
   Index func_index;
 };
@@ -372,6 +394,7 @@ struct ModuleDesc {
   std::vector<StartDesc> starts;
   std::vector<ElemDesc> elems;
   std::vector<DataDesc> datas;
+  std::vector<JSObjectDesc> jsobjs;
   Istream istream;
 };
 
@@ -916,6 +939,32 @@ class Event : public Extern {
   EventType type_;
 };
 
+class JSObjectDefinition : public Extern {
+ public:
+  static bool classof(const Object* obj);
+  static const ObjectKind skind = ObjectKind::JSObject;
+  static const char* GetTypeName() { return "JSObject"; }
+  using Ptr = RefPtr<JSObjectDefinition>;
+
+  static JSObjectDefinition::Ptr New(Store&, Instance&, const JSObjectDesc&);
+
+  Value GetAttr(u32) const;
+  void SetAttr(u32, Value);
+  // void NewAttr(GlobalType, Value, const std::string&);
+
+  // TODO;
+  // Result CallFunc(...) const;
+  // void NewFunc(Ref instance, FuncDesc);
+
+ private:
+  explicit JSObjectDefinition(Store&, const JSObjectDesc&);
+  void Mark(Store&) override;
+
+  Store& store_;
+  JSObjectDesc desc_;
+  RefVec attrs_, funcs_;
+};
+
 class ElemSegment {
  public:
   explicit ElemSegment(const ElemDesc*, RefPtr<Instance>&);
@@ -994,6 +1043,7 @@ class Instance : public Object {
   const RefVec& globals() const;
   const RefVec& events() const;
   const RefVec& exports() const;
+  const RefVec& jsobjs() const;
   const std::vector<ElemSegment>& elems() const;
   std::vector<ElemSegment>& elems();
   const std::vector<DataSegment>& datas() const;
@@ -1016,6 +1066,7 @@ class Instance : public Object {
   RefVec globals_;
   RefVec events_;
   RefVec exports_;
+  RefVec jsobjs_;
   std::vector<ElemSegment> elems_;
   std::vector<DataSegment> datas_;
 };
